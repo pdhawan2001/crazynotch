@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat ~/.claude/settings.json 2>/dev/null || echo \"NO settings.json\")",
+      "Bash(echo \"--- curl ---\"; which curl; echo \"--- jq ---\"; which jq || echo \"no jq\"; echo \"--- claude projects ---\"; ls ~/.claude/projects 2>/dev/null | head -5; echo \"--- count ---\"; ls ~/.claude/projects 2>/dev/null | wc -l)",
+      "Bash(mkdir -p Sources/AgentNotch/Views hooks Resources && ls -R | head -20)",
+      "Bash(chmod +x build.sh)",
+      "Bash(./build.sh release *)",
+      "Bash(open build/AgentNotch.app)",
+      "Bash(curl -sS --max-time 3 http://127.0.0.1:8787/health)"
+    ]
+  }
+}
