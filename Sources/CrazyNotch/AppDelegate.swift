@@ -26,12 +26,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installStatusItem()
     }
 
+    /// A template image is recoloured by the system to match the menu bar, so
+    /// it must carry shape in its alpha channel and no colour of its own.
+    private static func menuBarIcon() -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "menubar-template", withExtension: "png"),
+              let image = NSImage(contentsOf: url)
+        else {
+            return NSImage(systemSymbolName: "rectangle.topthird.inset.filled",
+                           accessibilityDescription: "CrazyNotch")
+        }
+        image.isTemplate = true
+        image.size = NSSize(width: 18, height: 18)
+        return image
+    }
+
     private func installStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(
-            systemSymbolName: "rectangle.topthird.inset.filled",
-            accessibilityDescription: "CrazyNotch"
-        )
+        item.button?.image = Self.menuBarIcon()
 
         let menu = NSMenu()
         menu.addItem(withTitle: "Listening on 127.0.0.1:\(Self.defaultPort)", action: nil, keyEquivalent: "")
