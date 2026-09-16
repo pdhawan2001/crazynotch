@@ -189,6 +189,14 @@ final class HookServer {
                     }
                 }
             case "Notification":
+                // Most notification types are status, not a question. idle_prompt
+                // in particular only means Claude is sitting idle, and treating it
+                // as attention raised the peek when nothing needed answering.
+                let kind = json["notification_type"] as? String ?? ""
+                let wantsHuman = ["permission_prompt", "agent_needs_input",
+                                  "elicitation_dialog", "elicitation_url_dialog"]
+                guard wantsHuman.contains(kind) else { break }
+
                 let message = json["notification_message"] as? String ?? "Needs your input"
                 store.upsert(id: sessionID, cwd: cwd) {
                     $0.state = .waiting
@@ -251,7 +259,16 @@ final class HookServer {
                     : "\(decision == "allow" ? "Approved" : "Denied") from the notch",
             ]
         ]
+        Self.note("  -> returned \(decision) for \(tool)")
         return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
+    }
+
+    static func note(_ text: String) {
+        let url = URL(fileURLWithPath: "/tmp/crazynotch-hooks.log")
+        let line = "\(ISO8601DateFormatter().string(from: Date()))\(text)\n"
+        if let handle = try? FileHandle(forWritingTo: url) {
+            handle.seekToEndOfFile(); handle.write(Data(line.utf8)); try? handle.close()
+        }
     }
 
     /// UserPromptSubmit also fires when the harness re-invokes a session on its
@@ -264,7 +281,10 @@ final class HookServer {
         let event = json["hook_event_name"] as? String ?? "?"
         let session = (json["session_id"] as? String)?.prefix(8) ?? "?"
         let tool = json["tool_name"] as? String ?? ""
-        let line = "\(ISO8601DateFormatter().string(from: Date())) \(event) \(session) \(tool)\n"
+        let kind = json["notification_type"] as? String ?? ""
+        let cmd = ((json["tool_input"] as? [String: Any])?["command"] as? String ?? "")
+            .prefix(48).replacingOccurrences(of: "\n", with: " ")
+        let line = "\(ISO8601DateFormatter().string(from: Date())) \(event) \(session) \(tool)\(kind) \(cmd)\n"
         let url = URL(fileURLWithPath: "/tmp/crazynotch-hooks.log")
         if let handle = try? FileHandle(forWritingTo: url) {
             handle.seekToEndOfFile()

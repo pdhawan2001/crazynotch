@@ -50,12 +50,14 @@ private struct PeekView: View {
             leading
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .padding(.trailing, 7)
+                .padding(.leading, 9)
 
             Color.clear.frame(width: notch.width)
 
             trailing
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 7)
+                .padding(.trailing, 9)
         }
         .frame(height: notch.height)
         .background(
@@ -68,7 +70,7 @@ private struct PeekView: View {
     @ViewBuilder
     private var leading: some View {
         if let s = store.attention.first {
-            AgentMark(agent: s.agent, size: 13, tint: .white)
+            AgentMark(agent: s.agent, size: 12, tint: .white)
         }
     }
 
@@ -76,7 +78,7 @@ private struct PeekView: View {
     private var trailing: some View {
         if let s = store.attention.first {
             Image(systemName: s.state == .approving ? "exclamationmark.circle.fill" : "questionmark.circle.fill")
-                .font(Theme.ui(13))
+                .font(Theme.ui(12))
                 .foregroundStyle(Theme.alert)
         }
     }

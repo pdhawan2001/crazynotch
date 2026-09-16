@@ -161,7 +161,7 @@ final class NotchWindow: NSObject {
     /// side, what it wants on the other. No label, so the strip stays short.
     static func peekWidth(store: SessionStore) -> CGFloat {
         let notch = NSScreen.notched?.notchSize ?? CGSize(width: 179, height: 32)
-        return notch.width + (store.collapsedMode == .full ? 44 : 44)
+        return notch.width + 56
     }
 
     static func measure(_ text: String, size: CGFloat, weight: NSFont.Weight) -> CGFloat {
