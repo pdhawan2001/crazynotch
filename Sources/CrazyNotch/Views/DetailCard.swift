@@ -47,7 +47,7 @@ struct DetailCard: View {
 
                 HStack(spacing: 6) {
                     AgentMark(agent: session.agent, size: 10, tint: Theme.dim)
-                    Text(detail.prettyModel.isEmpty ? session.agent : detail.prettyModel)
+                    Text(detail.model.isEmpty ? session.agent : detail.model)
                         .font(Theme.ui(11))
                         .foregroundStyle(Theme.dim)
                     if detail.costUSD > 0 {

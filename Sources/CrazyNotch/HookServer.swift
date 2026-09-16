@@ -168,10 +168,10 @@ final class HookServer {
                 }
             case "UserPromptSubmit":
                 let prompt = json["prompt"] as? String ?? ""
+                _ = prompt
                 store.upsert(id: sessionID, cwd: cwd) {
                     $0.state = .working
                     if !transcript.isEmpty { $0.transcriptPath = transcript }
-                    if Self.isTypedByHuman(prompt) { $0.lastMessage = Self.oneLine(prompt) }
                 }
             case "Stop":
                 // The hook hands over the final message and the live task list,
@@ -197,11 +197,7 @@ final class HookServer {
                                   "elicitation_dialog", "elicitation_url_dialog"]
                 guard wantsHuman.contains(kind) else { break }
 
-                let message = json["notification_message"] as? String ?? "Needs your input"
-                store.upsert(id: sessionID, cwd: cwd) {
-                    $0.state = .waiting
-                    $0.lastMessage = Self.oneLine(message)
-                }
+                store.upsert(id: sessionID, cwd: cwd) { $0.state = .waiting }
             case "SessionEnd":
                 store.remove(id: sessionID)
             default:

@@ -28,7 +28,6 @@ struct AgentSession: Identifiable, Equatable {
     var agent: String = "Claude Code"
     var cwd: String = ""
     var state: State = .idle
-    var lastMessage: String = ""
     var updatedAt: Date = Date()
     var pending: PendingApproval?
 
@@ -36,7 +35,6 @@ struct AgentSession: Identifiable, Equatable {
     /// transcript has produced one yet, then the last thing the user typed.
     var title: String {
         if let chatTitle = detail?.title, !chatTitle.isEmpty { return chatTitle }
-        if !lastMessage.isEmpty { return lastMessage }
         return agent
     }
 
@@ -110,7 +108,6 @@ struct SessionDetail: Equatable {
 
     var contextFraction: Double { min(contextPercent / 100, 1) }
 
-    var prettyModel: String { model }
 }
 
 

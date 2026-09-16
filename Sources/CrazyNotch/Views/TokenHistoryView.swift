@@ -63,13 +63,6 @@ struct TokenHistoryView: View {
                 Text(dateSpan).font(Theme.ui(12)).foregroundStyle(Theme.dim)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("EST. API VALUE").font(Theme.mono(10)).foregroundStyle(Theme.dim)
-                Text("≈ $\(Int(Double(total) / 1_000_000 * UsageTracker.dollarsPerMillionTokens))")
-                    .font(Theme.ui(30, .medium))
-                    .foregroundStyle(.white)
-                Text("At API rates").font(Theme.ui(11)).foregroundStyle(Theme.dim)
-            }
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 20)

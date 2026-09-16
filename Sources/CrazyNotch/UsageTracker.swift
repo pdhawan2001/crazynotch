@@ -26,7 +26,7 @@ struct UsageWindow: Identifiable, Equatable {
 /// been read, so a refresh only parses bytes appended since last time.
 private struct UsageCache: Codable {
     var hours: [String: Int] = [:]
-    var models: [String: [String: Int]] = [:]
+    var fableHours: [String: Int] = [:]
     var offsets: [String: UInt64] = [:]
     /// message id -> hour bucket. A transcript repeats a message's usage block
     /// across streaming updates, so without this the same tokens are counted
@@ -49,16 +49,12 @@ actor UsageTracker {
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("CrazyNotch")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("usage-cache-v3.json")
+        return dir.appendingPathComponent("usage-cache-v4.json")
     }
 
     /// The limit measures what has been spent since the window opened, not a
     /// trailing sum: a rolling total carries the previous window's usage in and
     /// reads far too high just after a reset.
-    /// Published Claude API rates, blended across input and output, used only
-    /// for the "at API rates" estimate — this plan is not billed per token.
-    static let dollarsPerMillionTokens = 7.50
-
     struct DailyPoint: Identifiable, Equatable {
         let id: String
         let day: Date
@@ -143,9 +139,8 @@ actor UsageTracker {
             if let id, let hour = Int(bucket) { cache.counted[id] = hour }
             cache.hours[bucket, default: 0] += total
 
-            if let model = message["model"] as? String {
-                let family = Self.family(of: model)
-                cache.models[family, default: [:]][bucket, default: 0] += total
+            if let model = message["model"] as? String, model.lowercased().contains("fable") {
+                cache.fableHours[bucket, default: 0] += total
             }
         }
 
@@ -153,30 +148,13 @@ actor UsageTracker {
         cache.offsets[key] = min(consumed, to)
     }
 
-    private static func family(of model: String) -> String {
-        let name = model.lowercased()
-        if name.contains("fable")  { return "fable" }
-        if name.contains("opus")   { return "opus" }
-        if name.contains("sonnet") { return "sonnet" }
-        if name.contains("haiku")  { return "haiku" }
-        return "other"
-    }
-
     private static func bucketKey(_ date: Date) -> String {
         String(Int(date.timeIntervalSince1970) / 3600)
     }
 
-    func tokensBetween(start: Date, end: Date) -> Int {
-        let lo = Int(start.timeIntervalSince1970) / 3600
-        let hi = Int(end.timeIntervalSince1970) / 3600
-        return cache.hours.reduce(into: 0) { sum, entry in
-            if let h = Int(entry.key), h >= lo, h <= hi { sum += entry.value }
-        }
-    }
-
     private func tokens(since: Date, model: String? = nil) -> Int {
         let floor = Int(since.timeIntervalSince1970) / 3600
-        let source = model.flatMap { cache.models[$0] } ?? (model == nil ? cache.hours : [:])
+        let source = model == "fable" ? cache.fableHours : cache.hours
         return source.reduce(into: 0) { sum, entry in
             if let h = Int(entry.key), h >= floor { sum += entry.value }
         }
@@ -185,9 +163,7 @@ actor UsageTracker {
     private func pruneOldBuckets() {
         let floor = Int(Date().addingTimeInterval(-31 * 86400).timeIntervalSince1970) / 3600
         cache.hours = cache.hours.filter { Int($0.key).map { $0 >= floor } ?? false }
-        cache.models = cache.models.mapValues { buckets in
-            buckets.filter { Int($0.key).map { $0 >= floor } ?? false }
-        }
+        cache.fableHours = cache.fableHours.filter { Int($0.key).map { $0 >= floor } ?? false }
         cache.counted = cache.counted.filter { $0.value >= floor }
     }
 
