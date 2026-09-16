@@ -48,18 +48,17 @@ private struct PeekView: View {
     var body: some View {
         HStack(spacing: 0) {
             leading
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.trailing, 7)
-                .padding(.leading, 9)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             Color.clear.frame(width: notch.width)
 
             trailing
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 7)
-                .padding(.trailing, 9)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
-        .frame(height: notch.height)
+        // Centring in the full height reads as bottom-heavy, because the top of
+        // the slab is the cutout and the eye measures against the visible part.
+        .offset(y: -Theme.peekDrop * 0.75)
+        .frame(height: notch.height + Theme.peekDrop)
         .background(
             UnevenRoundedRectangle(bottomLeadingRadius: 7, bottomTrailingRadius: 7)
                 .fill(.black)

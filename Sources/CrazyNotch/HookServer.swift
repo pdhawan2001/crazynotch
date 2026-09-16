@@ -241,7 +241,10 @@ final class HookServer {
                 await self.store.awaitDecision(sessionID: sessionID, cwd: cwd, approval: approval)
             }
             group.addTask {
-                try? await Task.sleep(nanoseconds: 570 * 1_000_000_000)
+                // Claude puts its own prompt up 6s after asking and stops
+                // waiting on the hook, so holding the card any longer just
+                // leaves it stranded after the question was answered in chat.
+                try? await Task.sleep(nanoseconds: 10 * 1_000_000_000)
                 await MainActor.run { self.store.resolve(id, decision: "ask") }
                 return "ask"
             }

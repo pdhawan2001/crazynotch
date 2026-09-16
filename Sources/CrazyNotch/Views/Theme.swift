@@ -3,7 +3,7 @@ import AppKit
 
 enum Theme {
     static let headerHeight: CGFloat = 48
-    static let peekDrop: CGFloat = 0
+    static let peekDrop: CGFloat = 12
     static let panelCorner: CGFloat = 18
 
     static let ink = Color.white

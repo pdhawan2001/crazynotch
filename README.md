@@ -39,10 +39,26 @@ regardless.
 ## Install
 
 ```bash
-./build.sh release
-cp -R build/CrazyNotch.app /Applications/
-./install.sh                # wires the Claude Code hooks
+git clone https://github.com/pdhawan2001/crazynotch.git
+cd crazynotch
+./install.sh
 ```
+
+That builds the app, installs it to `/Applications`, wires the Claude Code
+hooks and status line, and registers it to start at login. It backs up
+`~/.claude/settings.json` first, preserves any status line you already had, and
+is safe to re-run.
+
+Then start a **new** Claude Code session — hooks load at session start, so
+sessions already running will not report.
+
+Requires macOS 14+ and Swift (Xcode or `xcode-select --install`).
+
+```bash
+./uninstall.sh      # removes the app, the login item and this tool's hooks
+./fetch-logos.sh    # optional: vendor marks, falls back to drawn ones
+```
+
 
 ## Approvals
 
