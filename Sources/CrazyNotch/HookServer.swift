@@ -149,7 +149,11 @@ final class HookServer {
         }
 
         await MainActor.run {
-            if let pending = store.session(sessionID)?.pending {
+            // Only events that genuinely end the request may cancel it. A
+            // Notification fires milliseconds after PermissionRequest for the
+            // very same prompt, so clearing on any event resolved the approval
+            // as "ask" before the user could reach the button.
+            if event == "SessionEnd", let pending = store.session(sessionID)?.pending {
                 store.resolve(pending.id, decision: "ask")
             }
 
