@@ -136,7 +136,6 @@ final class HookServer {
     /// lands in Claude's context — so every event except PermissionRequest must
     /// answer with an empty body.
     private func handleHook(_ body: Data, conn: NWConnection) async -> Data {
-        Self.trace(body)
         guard let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
               let event = json["hook_event_name"] as? String,
               let sessionID = json["session_id"] as? String
@@ -258,42 +257,12 @@ final class HookServer {
                     : "\(decision == "allow" ? "Approved" : "Denied") from the notch",
             ]
         ]
-        Self.note("  -> returned \(decision) for \(tool)")
         return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
-    }
-
-    static func note(_ text: String) {
-        let url = URL(fileURLWithPath: "/tmp/crazynotch-hooks.log")
-        let line = "\(ISO8601DateFormatter().string(from: Date()))\(text)\n"
-        if let handle = try? FileHandle(forWritingTo: url) {
-            handle.seekToEndOfFile(); handle.write(Data(line.utf8)); try? handle.close()
-        }
     }
 
     /// UserPromptSubmit also fires when the harness re-invokes a session on its
     /// own; those carry notification text as the prompt and must not be shown
     /// as something the user said.
-    /// One line per received hook, so a session that never reaches the app can
-    /// be told apart from one whose decision is being ignored.
-    static func trace(_ body: Data) {
-        guard let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any] else { return }
-        let event = json["hook_event_name"] as? String ?? "?"
-        let session = (json["session_id"] as? String)?.prefix(8) ?? "?"
-        let tool = json["tool_name"] as? String ?? ""
-        let kind = json["notification_type"] as? String ?? ""
-        let cmd = ((json["tool_input"] as? [String: Any])?["command"] as? String ?? "")
-            .prefix(48).replacingOccurrences(of: "\n", with: " ")
-        let line = "\(ISO8601DateFormatter().string(from: Date())) \(event) \(session) \(tool)\(kind) \(cmd)\n"
-        let url = URL(fileURLWithPath: "/tmp/crazynotch-hooks.log")
-        if let handle = try? FileHandle(forWritingTo: url) {
-            handle.seekToEndOfFile()
-            handle.write(Data(line.utf8))
-            try? handle.close()
-        } else {
-            try? Data(line.utf8).write(to: url)
-        }
-    }
-
     static func isTypedByHuman(_ text: String) -> Bool {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return false }
